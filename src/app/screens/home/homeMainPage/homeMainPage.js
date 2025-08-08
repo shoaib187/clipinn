@@ -16,6 +16,7 @@ import { wp } from '../../../../components/constants/responsiveSize';
 import { FONT } from '../../../../components/constants/font';
 import Button from '../../../../components/common/button/button';
 import Donut from '../../../../components/common/donut/donut';
+// import CheckInOutSheet from '../../../../components/common/bottomsheet/bottomSheet';
 
 export default function HomeMainPage() {
   const [isCheckIn, setIsCheckIn] = useState(false);
@@ -75,7 +76,13 @@ export default function HomeMainPage() {
           <Text style={styles.timeIn}>09:00 AM</Text>
           <Text style={styles.timeIn}>06:00 PM</Text>
         </View>
-        <Donut />
+        {/* <View style={styles.attendaceDonutWrapper}>
+          <View>
+            <Text style={styles.attendance}>Attendance Overview</Text>
+            <Text style={styles.month}>Monhtly</Text>
+          </View>
+          <Donut max={100} percentage={60} color={COLORS.btnColor} />
+        </View> */}
         {isCheckIn ? (
           <View style={styles.btnWrapper}>
             <TouchableOpacity style={styles.checkInButton}>
@@ -186,6 +193,7 @@ export default function HomeMainPage() {
           <Text style={styles.timeIn}>06:00 PM</Text>
         </View>
       </View>
+      {/* <CheckInOutSheet /> */}
     </SafeAreaView>
   );
 }
@@ -286,6 +294,7 @@ const styles = StyleSheet.create({
   },
   day: {
     fontFamily: FONT.PoppinsMedium,
+    // marginBottom: 2,
   },
   timeSpent: {
     fontFamily: FONT.PoppinsRegular,
@@ -307,6 +316,23 @@ const styles = StyleSheet.create({
   },
   checkIn: {
     fontFamily: FONT.PoppinsMedium,
+    color: COLORS.paraColor,
+  },
+  attendaceDonutWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    paddingVertical: 6,
+    marginVertical: 6,
+  },
+  attendance: {
+    fontFamily: FONT.PoppinsMedium,
+  },
+  month: {
+    fontFamily: FONT.PoppinsRegular,
     color: COLORS.paraColor,
   },
 });

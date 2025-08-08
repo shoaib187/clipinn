@@ -1,19 +1,20 @@
 import { View, Text, Animated, TextInput, StyleSheet } from 'react-native';
 import React, { useRef } from 'react';
 import Svg, { Circle, G } from 'react-native-svg';
+import { FONT } from '../../constants/font';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedInput = Animated.createAnimatedComponent(TextInput);
 
 export default function Donut({
-  percentage = 800,
-  radius = 40,
-  strokeWidth = 10,
+  percentage = 100,
+  radius = 25,
+  strokeWidth = 7,
   duration = 500,
   color = 'blue',
   delay = 2000,
   textColor,
-  max = 1000,
+  max = 100,
   title,
 }) {
   const circleRef = useRef();
@@ -96,7 +97,6 @@ export default function Donut({
           defaultValue="0"
           editable={false}
         />
-        <Text style={styles.centerSub}>{title}</Text>
       </View>
     </View>
   );
@@ -104,15 +104,14 @@ export default function Donut({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centerSub: {
-    fontSize: 14,
-    bottom: 6,
+    // flex: 1,
+    // alignItems: 'center',
+    // justifyContent: 'center',
   },
   target: {
-    fontSize: 26,
+    fontSize: 12,
+    position: 'absolute',
+    fontFamily: FONT.PoppinsMedium, // Font family
+    top: 6,
   },
 });

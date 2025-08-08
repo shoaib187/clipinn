@@ -1,73 +1,13 @@
+import { View, Text, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
-  Alert,
-} from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { FONT } from '../../../../components/constants/font';
-import { wp } from '../../../../components/constants/responsiveSize';
-import { COLORS } from '../../../../components/constants/colors';
 
-import SelectedDateRecord from '../../../../components/static/attendance/selectedDateRecord/selectedDateRecord';
-
-export default function AttendanceMainPage() {
+export default function CalendarCard() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0],
   );
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
-
-  // Add this state at the top of your component
-  const [attendanceStatus, setAttendanceStatus] = useState({
-    checkedIn: false,
-    checkInTime: null,
-    checkOutTime: null,
-    currentLocation: null,
-  });
-
-  // Add this function to handle check-in/out
-  const handleCheckInOut = () => {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    if (!attendanceStatus.checkedIn) {
-      // Get current location (you'll need to implement this properly)
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          setAttendanceStatus({
-            checkedIn: true,
-            checkInTime: timeString,
-            checkOutTime: null,
-            currentLocation: `${position.coords.latitude.toFixed(
-              4,
-            )}, ${position.coords.longitude.toFixed(4)}`,
-          });
-          Alert.alert('Checked In', `You checked in at ${timeString}`);
-        },
-        error => Alert.alert('Location Error', 'Could not get your location'),
-      );
-    } else {
-      setAttendanceStatus(prev => ({
-        ...prev,
-        checkedIn: false,
-        checkOutTime: timeString,
-      }));
-      Alert.alert('Checked Out', `You checked out at ${timeString}`);
-    }
-  };
-
-  // Add this component just below your calendar section
 
   // Sample attendance data
   const attendanceData = {
@@ -214,88 +154,99 @@ export default function AttendanceMainPage() {
       </View>
     );
   };
-
   return (
-    <SafeAreaView style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
-      <StatusBar
-        translucent
-        animated
-        backgroundColor={'#fff'}
-        barStyle={'dark-content'}
-        showHideTransition={'fade'}
+    <View style={styles.calendarContainer}>
+      <Calendar
+        current={selectedDate}
+        onDayPress={day => setSelectedDate(day.dateString)}
+        markedDates={markedDates}
+        // markingType="multi-dot"
+        onMonthChange={date => {
+          setMonth(date.month);
+          setYear(date.year);
+        }}
+        theme={{
+          selectedDayBackgroundColor: '#3F51B5',
+          todayTextColor: '#3F51B5',
+          arrowColor: '#3F51B5',
+          monthTextColor: '#3F51B5',
+          textMonthFontWeight: 'bold',
+        }}
       />
-      <View style={styles.container}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: 14,
-            paddingVertical: 6,
-          }}
-        >
-          <View>
-            <Text style={styles.title}>Attendance Record</Text>
-            <Text style={styles.record}>Daily/Monthly</Text>
-          </View>
-          <TouchableOpacity style={styles.checkInButton}>
-            <Text style={styles.checkInText}>Check In</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Calendar Section */}
-          <View style={styles.calendarContainer}>
-            <Calendar
-              current={selectedDate}
-              onDayPress={day => setSelectedDate(day.dateString)}
-              markedDates={markedDates}
-              onMonthChange={date => {
-                setMonth(date.month);
-                setYear(date.year);
-              }}
-              theme={{
-                selectedDayBackgroundColor: '#3F51B5',
-                todayTextColor: '#3F51B5',
-                arrowColor: '#3F5439',
-                monthTextColor: '#3F51B5',
-                textMonthFontWeight: 'bold',
-              }}
-            />
-          </View>
-          {/* Selected Day Attendance */}
-          <SelectedDateRecord
-            attendanceData={attendanceData}
-            selectedDate={selectedDate}
-          />
-          {/* Monthly Attendance List */}
-          <View style={styles.monthlyAttendance}>
-            <Text style={styles.sectionTitle}>
-              {new Date(year, month - 1).toLocaleDateString('en-US', {
-                month: 'long',
-                year: 'numeric',
-              })}
-            </Text>
-
-            <FlatList
-              data={monthlyAttendance}
-              renderItem={renderAttendanceItem}
-              keyExtractor={([date]) => date}
-              contentContainerStyle={styles.attendanceList}
-            />
-          </View>
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: '#fff',
   },
   calendarContainer: {
+    padding: 15,
+    backgroundColor: '#fff',
+    elevation: 2,
+    marginBottom: 10,
+  },
+  dailyAttendance: {
+    padding: 20,
     backgroundColor: '#fff',
     marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#212121',
+  },
+  dailyStats: {
+    backgroundColor: '#fafafa',
+    borderRadius: 10,
+    padding: 15,
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    marginBottom: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    backgroundColor: '#f5f5f5',
+  },
+  statusText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  timeLabel: {
+    marginLeft: 10,
+    marginRight: 15,
+    color: '#757575',
+    width: 70,
+  },
+  timeValue: {
+    fontWeight: '500',
+    color: '#212121',
+  },
+  summaryRow: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  summaryText: {
+    color: '#757575',
+    fontStyle: 'italic',
+  },
+  noDataText: {
+    color: '#9E9E9E',
+    textAlign: 'center',
+    padding: 20,
   },
   monthlyAttendance: {
     flex: 1,
@@ -349,70 +300,5 @@ const styles = StyleSheet.create({
   hoursText: {
     fontWeight: '500',
     color: '#212121',
-  },
-  title: {
-    fontFamily: FONT.PoppinsMedium,
-    fontSize: wp(5),
-    marginBottom: -6,
-  },
-  record: {
-    fontFamily: FONT.PoppinsRegular,
-    fontSize: wp(3.5),
-  },
-  checkInButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 50,
-    backgroundColor: COLORS.btnColor,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkInText: {
-    fontFamily: FONT.PoppinsMedium,
-    color: COLORS.white,
-    marginBottom: -4,
-    fontSize: wp(3.5),
-  },
-
-  // check in out
-  checkInCard: {
-    marginHorizontal: 15,
-    marginTop: 10,
-    marginBottom: 20,
-    borderRadius: 12,
-    overflow: 'hidden',
-    elevation: 3,
-  },
-  gradientCard: {
-    padding: 20,
-  },
-  checkInTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  checkInBut: {
-    backgroundColor: 'white',
-    borderRadius: 25,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  checkInButtonText: {
-    color: '#3F51B5',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  locationText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 12,
-    marginLeft: 5,
   },
 });
