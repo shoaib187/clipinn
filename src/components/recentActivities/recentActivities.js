@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     fontSize: wp(4.5),
   },
   activityItem: {
-    padding: 15,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
     flexDirection: 'row',

@@ -1,418 +1,192 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
+  ScrollView,
   SafeAreaView,
   StatusBar,
-  ScrollView,
-  Alert,
+  Image,
+  Animated,
+  Dimensions,
 } from 'react-native';
-import { Calendar } from 'react-native-calendars';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { FONT } from '../../../../components/constants/font';
-import { wp } from '../../../../components/constants/responsiveSize';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { COLORS } from '../../../../components/constants/colors';
+import { wp } from '../../../../components/constants/responsiveSize';
+import { FONT } from '../../../../components/constants/font';
+import CheckInButton from '../../../../components/common/checkInButton/checkInButton';
 
-import SelectedDateRecord from '../../../../components/static/attendance/selectedDateRecord/selectedDateRecord';
+const { width, height } = Dimensions.get('window');
+const ITEM_HEIGHT = height * 0.2;
 
 export default function AttendanceMainPage() {
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0],
-  );
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(new Date().getFullYear());
-
-  // Add this state at the top of your component
-  const [attendanceStatus, setAttendanceStatus] = useState({
-    checkedIn: false,
-    checkInTime: null,
-    checkOutTime: null,
-    currentLocation: null,
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const animatedHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [ITEM_HEIGHT, 69],
+    extrapolate: 'clamp',
   });
-
-  // Add this function to handle check-in/out
-  const handleCheckInOut = () => {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    if (!attendanceStatus.checkedIn) {
-      // Get current location (you'll need to implement this properly)
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          setAttendanceStatus({
-            checkedIn: true,
-            checkInTime: timeString,
-            checkOutTime: null,
-            currentLocation: `${position.coords.latitude.toFixed(
-              4,
-            )}, ${position.coords.longitude.toFixed(4)}`,
-          });
-          Alert.alert('Checked In', `You checked in at ${timeString}`);
-        },
-        error => Alert.alert('Location Error', 'Could not get your location'),
-      );
-    } else {
-      setAttendanceStatus(prev => ({
-        ...prev,
-        checkedIn: false,
-        checkOutTime: timeString,
-      }));
-      Alert.alert('Checked Out', `You checked out at ${timeString}`);
-    }
-  };
-
-  // Add this component just below your calendar section
-
-  // Sample attendance data
-  const attendanceData = {
-    '2025-07-01': {
-      status: 'present',
-      timeIn: '09:05 AM',
-      timeOut: '06:15 PM',
-    },
-    '2025-07-02': {
-      status: 'present',
-      timeIn: '09:10 AM',
-      timeOut: '06:20 PM',
-    },
-    '2025-07-03': { status: 'absent' },
-    '2025-07-04': { status: 'weekend' },
-    '2025-07-05': { status: 'weekend' },
-    '2025-07-06': {
-      status: 'present',
-      timeIn: '09:00 AM',
-      timeOut: '06:10 PM',
-    },
-    '2025-07-07': { status: 'late', timeIn: '10:30 AM', timeOut: '06:45 PM' },
-    '2025-07-08': {
-      status: 'present',
-      timeIn: '09:15 AM',
-      timeOut: '06:20 PM',
-    },
-    '2025-07-09': {
-      status: 'half-day',
-      timeIn: '09:00 AM',
-      timeOut: '01:30 PM',
-    },
-    '2025-07-10': {
-      status: 'present',
-      timeIn: '08:55 AM',
-      timeOut: '06:05 PM',
-    },
-  };
-
-  // Generate marked dates for calendar
-  const markedDates = {};
-  Object.keys(attendanceData).forEach(date => {
-    let dotColor = '';
-    switch (attendanceData[date].status) {
-      case 'present':
-        dotColor = '#4CAF50';
-        break;
-      case 'absent':
-        dotColor = '#F44336';
-        break;
-      case 'late':
-        dotColor = '#FF9800';
-        break;
-      case 'half-day':
-        dotColor = '#2196F3';
-        break;
-      case 'weekend':
-        dotColor = '#9E9E9E';
-        break;
-    }
-    markedDates[date] = {
-      marked: true,
-      dotColor,
-      selected: date === selectedDate,
-    };
-  });
-  markedDates[selectedDate] = { ...markedDates[selectedDate], selected: true };
-
-  // Filter attendance for the selected month
-  const monthlyAttendance = Object.entries(attendanceData)
-    .filter(([date]) => {
-      const [y, m] = date.split('-');
-      return parseInt(m) === month && parseInt(y) === year;
-    })
-    .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA));
-
-  const renderAttendanceItem = ({ item }) => {
-    const [date, data] = item;
-    const day = new Date(date).toLocaleDateString('en-US', {
-      weekday: 'short',
-    });
-
-    return (
-      <View style={styles.attendanceItem}>
-        <View style={styles.dateColumn}>
-          <Text style={styles.dateText}>{date.split('-')[2]}</Text>
-          <Text style={styles.dayText}>{day}</Text>
-        </View>
-
-        <View style={styles.statusColumn}>
-          <View
-            style={[
-              styles.statusIndicator,
-              {
-                backgroundColor:
-                  data.status === 'present'
-                    ? '#E8F5E9'
-                    : data.status === 'absent'
-                    ? '#FFEBEE'
-                    : data.status === 'late'
-                    ? '#FFF3E0'
-                    : data.status === 'half-day'
-                    ? '#E3F2FD'
-                    : '#F5F5F5',
-              },
-            ]}
-          >
-            <Text
-              style={{
-                color:
-                  data.status === 'present'
-                    ? '#4CAF50'
-                    : data.status === 'absent'
-                    ? '#F44336'
-                    : data.status === 'late'
-                    ? '#FF9800'
-                    : data.status === 'half-day'
-                    ? '#2196F3'
-                    : '#9E9E9E',
-                textTransform: 'capitalize',
-              }}
-            >
-              {data.status}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.timeColumn}>
-          {data.timeIn && <Text style={styles.timeText}>{data.timeIn}</Text>}
-          {data.timeOut && <Text style={styles.timeText}>{data.timeOut}</Text>}
-        </View>
-
-        <View style={styles.hoursColumn}>
-          {data.status === 'present' && (
-            <Text style={styles.hoursText}>9h 10m</Text>
-          )}
-          {data.status === 'late' && (
-            <Text style={styles.hoursText}>8h 15m</Text>
-          )}
-          {data.status === 'half-day' && (
-            <Text style={styles.hoursText}>4h 30m</Text>
-          )}
-        </View>
-      </View>
-    );
-  };
-
   return (
-    <SafeAreaView style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: COLORS.white,
+        paddingTop: StatusBar.currentHeight,
+      }}
+    >
       <StatusBar
         translucent
         animated
-        backgroundColor={'#fff'}
-        barStyle={'dark-content'}
+        backgroundColor={COLORS.black}
+        barStyle={'light-content'}
         showHideTransition={'fade'}
       />
-      <View style={styles.container}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: 14,
-            paddingVertical: 6,
-          }}
-        >
-          <View>
-            <Text style={styles.title}>Attendance Record</Text>
-            <Text style={styles.record}>Daily/Monthly</Text>
-          </View>
-          <TouchableOpacity style={styles.checkInButton}>
-            <Text style={styles.checkInText}>Check In</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Calendar Section */}
-          <View style={styles.calendarContainer}>
-            <Calendar
-              current={selectedDate}
-              onDayPress={day => setSelectedDate(day.dateString)}
-              markedDates={markedDates}
-              onMonthChange={date => {
-                setMonth(date.month);
-                setYear(date.year);
-              }}
-              theme={{
-                selectedDayBackgroundColor: '#3F51B5',
-                todayTextColor: '#3F51B5',
-                arrowColor: '#3F5439',
-                monthTextColor: '#3F51B5',
-                textMonthFontWeight: 'bold',
-              }}
-            />
-          </View>
-          {/* Selected Day Attendance */}
-          <SelectedDateRecord
-            attendanceData={attendanceData}
-            selectedDate={selectedDate}
-          />
-          {/* Monthly Attendance List */}
-          <View style={styles.monthlyAttendance}>
-            <Text style={styles.sectionTitle}>
-              {new Date(year, month - 1).toLocaleDateString('en-US', {
-                month: 'long',
-                year: 'numeric',
-              })}
-            </Text>
 
-            <FlatList
-              data={monthlyAttendance}
-              renderItem={renderAttendanceItem}
-              keyExtractor={([date]) => date}
-              contentContainerStyle={styles.attendanceList}
-            />
+      <Animated.View
+        style={[
+          styles.backdrop,
+          { position: 'absolute', height: animatedHeight },
+        ]}
+      />
+
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.name}>Hey Shabiii,</Text>
+            <Text style={styles.greeting}>
+              Good Morning, Mark your Attendance!
+            </Text>
           </View>
-        </ScrollView>
-      </View>
+          <Image
+            source={{
+              uri: 'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D',
+            }}
+            style={styles.profileImage}
+          />
+        </View>
+        <View style={styles.timeAlign}>
+          <Text style={styles.time}>09:00 AM</Text>
+          <Text style={styles.date}>Oct 26, 2022 - Wednesday</Text>
+          <CheckInButton />
+        </View>
+
+        {/* Check In / Check Out */}
+        <View style={styles.checkRow}>
+          <View style={styles.checkCard}>
+            <Ionicons
+              name="log-in-outline"
+              size={38}
+              color="#3AA272"
+              style={styles.icon}
+            />
+            <Text style={styles.checkTime}>09:12</Text>
+            <Text style={styles.checkLabel}>Check In</Text>
+          </View>
+
+          <View style={styles.checkCard}>
+            <Ionicons
+              name="log-out-outline"
+              size={38}
+              color="#E86A5D"
+              style={styles.icon}
+            />
+            <Text style={styles.checkTime}>--:--</Text>
+            <Text style={styles.checkLabel}>Check Out</Text>
+          </View>
+
+          <View style={styles.checkCard}>
+            <Ionicons
+              name="time-outline"
+              size={38}
+              color="#4D7EDC"
+              style={styles.icon}
+            />
+            <Text style={styles.checkTime}>--:--</Text>
+            <Text style={styles.checkLabel}>Total Hours</Text>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-  },
-  calendarContainer: {
-    backgroundColor: '#fff',
-    marginBottom: 10,
-  },
-  monthlyAttendance: {
     flex: 1,
-    paddingHorizontal: 15,
+    paddingHorizontal: 14,
   },
-  attendanceList: {
-    paddingBottom: 20,
+  greeting: {
+    fontSize: wp(4),
+    color: '#777',
   },
-  attendanceItem: {
+  name: {
+    fontSize: wp(6),
+    marginBottom: -4,
+    fontFamily: FONT.PoppinsSemiBold,
+    color: '#fff',
+  },
+  profileImage: {
+    width: wp(12),
+    height: wp(12),
+    borderRadius: wp(20),
+    borderWidth: 2,
+    borderColor: COLORS.slateColor,
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
   },
-  dateColumn: {
-    width: 50,
-    alignItems: 'center',
-  },
-  dateText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#212121',
-  },
-  dayText: {
-    fontSize: 12,
-    color: '#757575',
-    marginTop: 2,
-  },
-  statusColumn: {
-    flex: 1,
-    paddingHorizontal: 10,
-  },
-  statusIndicator: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  timeColumn: {
-    width: 100,
-  },
-  timeText: {
-    fontSize: 12,
-    color: '#757575',
-  },
-  hoursColumn: {
-    width: 70,
-    alignItems: 'flex-end',
-  },
-  hoursText: {
-    fontWeight: '500',
-    color: '#212121',
-  },
-  title: {
-    fontFamily: FONT.PoppinsMedium,
-    fontSize: wp(5),
-    marginBottom: -6,
-  },
-  record: {
-    fontFamily: FONT.PoppinsRegular,
-    fontSize: wp(3.5),
-  },
-  checkInButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 50,
-    backgroundColor: COLORS.btnColor,
+  timeAlign: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  checkInText: {
-    fontFamily: FONT.PoppinsMedium,
-    color: COLORS.white,
-    marginBottom: -4,
-    fontSize: wp(3.5),
-  },
-
-  // check in out
-  checkInCard: {
-    marginHorizontal: 15,
-    marginTop: 10,
-    marginBottom: 20,
+    paddingVertical: 30,
+    // marginTop: 30,
+    backgroundColor: '#fff',
     borderRadius: 12,
-    overflow: 'hidden',
-    elevation: 3,
+    marginTop: 12,
   },
-  gradientCard: {
-    padding: 20,
+  time: {
+    fontFamily: FONT.PoppinsSemiBold,
+    fontSize: wp(10),
+    marginBottom: -10,
   },
-  checkInTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
+  date: {
+    fontFamily: FONT.PoppinsRegular,
+    fontSize: wp(4),
+    color: COLORS.paraColor,
+    marginBottom: wp(14),
   },
-  checkInBut: {
-    backgroundColor: 'white',
-    borderRadius: 25,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  checkInButtonText: {
-    color: '#3F51B5',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-
-  locationRow: {
+  checkRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    justifyContent: 'space-between',
   },
-  locationText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 12,
-    marginLeft: 5,
+  checkCard: {
+    flex: 0.3,
+    // backgroundColor: 'red',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+  checkTime: {
+    fontFamily: FONT.PoppinsMedium,
+    marginVertical: 6,
+  },
+  checkLabel: {
+    fontFamily: FONT.PoppinsRegular,
+  },
+  backdrop: {
+    position: 'absolute',
+    top: StatusBar.currentHeight || 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.black,
+    // zIndex: 1,
+    // justifyContent: 'center',
+    paddingHorizontal: 14,
   },
 });

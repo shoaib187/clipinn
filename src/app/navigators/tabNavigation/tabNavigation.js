@@ -3,7 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Image, StyleSheet, View } from 'react-native';
-import HomePage from '../../screens/home/homePage/homePage';
 import AttendanceHomePage from '../../screens/attendance/attendanceHomePage/attendanceHomePage';
 import TaskHomePage from '../../screens/tasks/taskHomePage/taskHomePage';
 import ChatHomePage from '../../screens/chats/chatHomePage/chatHomePage';

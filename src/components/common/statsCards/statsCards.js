@@ -4,6 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { FONT } from '../../constants/font';
 import { wp } from '../../constants/responsiveSize';
+import { COLORS } from '../../constants/colors';
 
 const StatsCards = () => {
   const statsData = [
@@ -97,6 +98,9 @@ const StatsCards = () => {
 };
 
 const styles = StyleSheet.create({
+  statsContainer: {
+    // backgroundColor: COLORS.black,
+  },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -105,7 +109,7 @@ const styles = StyleSheet.create({
   statCard: {
     width: '48%',
     borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     marginBottom: 16,
     borderWidth: 1,
     paddingVertical: 6,

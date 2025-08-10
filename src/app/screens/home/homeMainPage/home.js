@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
-  ScrollView,
   StyleSheet,
   SafeAreaView,
   StatusBar,
+  Animated,
+  Dimensions,
 } from 'react-native';
-
 import { useNavigation } from '@react-navigation/native';
 import StatsCards from '../../../../components/common/statsCards/statsCards';
 import TabHeader from '../../../../components/common/tabHeader/tabHeader';
@@ -15,9 +15,13 @@ import Categories from '../../../../components/categories/categories';
 import RecentActivities from '../../../../components/recentActivities/recentActivities';
 import UpcomingEvents from '../../../../components/upcomingEvents/upcomingEvents';
 import { COLORS } from '../../../../components/constants/colors';
+const { width, height } = Dimensions.get('window');
+const ITEM_HEIGHT = height * 0.2;
 
 const Home = () => {
   const navigation = useNavigation();
+  const scrollY = useRef(new Animated.Value(0)).current;
+
   const categories = [
     {
       id: 'dashboard',
@@ -106,7 +110,6 @@ const Home = () => {
       bgColor: 'rgba(244, 67, 54, 0.08)', // Very light red
     },
   ];
-
   const recentActivities = [
     {
       id: 1,
@@ -137,44 +140,76 @@ const Home = () => {
     },
   ];
 
+  // Animate from 60 → 0 height on scroll
+  const animatedHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [ITEM_HEIGHT, 69],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <SafeAreaView style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar
-        translucent={true}
-        backgroundColor={'#fff'}
+        translucent
+        backgroundColor={COLORS.black}
         animated
-        showHideTransition={'fade'}
-        barStyle={'dark-content'}
+        barStyle="light-content"
+      />
+
+      {/* animated, fixed header */}
+      <Animated.View
+        style={[
+          styles.header,
+          { position: 'absolute', height: animatedHeight },
+        ]}
       />
       <TabHeader />
-      <ScrollView
+
+      {/* Scrollable content */}
+      <Animated.ScrollView
+        contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.container}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false },
+        )}
       >
-        <View style={{ flex: 1 }}>
-          {/* Stats card */}
+        <View style={{ paddingHorizontal: 14 }}>
           <StatsCards />
-          {/* Categories */}
-          <Categories categories={categories} />
-          {/* Quick Actions */}
-          <QuickActions navigation={navigation} quickActions={quickActions} />
-
-          {/* Recent Activities */}
-          <RecentActivities recentActivities={recentActivities} />
-
-          {/* Upcoming Events */}
-          <UpcomingEvents recentActivities={recentActivities} />
         </View>
-      </ScrollView>
+        <Categories categories={categories} />
+        <QuickActions navigation={navigation} quickActions={quickActions} />
+        <RecentActivities recentActivities={recentActivities} />
+        <UpcomingEvents recentActivities={recentActivities} />
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    paddingTop: StatusBar.currentHeight || 0,
+  },
+  header: {
+    position: 'absolute',
+    top: StatusBar.currentHeight || 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.black,
+    // zIndex: 1,
+    // justifyContent: 'center',
     paddingHorizontal: 14,
-    paddingTop: 12,
+  },
+  scrollContainer: {
+    marginTop: 14,
+    // paddingHorizontal: 14,
+    backgroundColor: COLORS.white,
+    paddingBottom: 20,
+    marginHorizontal: 14,
+    paddingTop: 14,
+    borderRadius: 8,
   },
 });
 

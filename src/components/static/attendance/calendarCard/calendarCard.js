@@ -1,176 +1,170 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
 import { Calendar } from 'react-native-calendars';
+import { COLORS } from '../../../constants/colors';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { wp } from '../../../constants/responsiveSize';
+import { FONT } from '../../../constants/font';
 
 export default function CalendarCard() {
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0],
-  );
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
 
-  // Sample attendance data
+  const [selectedDate, setSelectedDate] = useState(
+    today.toISOString().split('T')[0],
+  );
+  const [month, setMonth] = useState(currentMonth);
+  const [year, setYear] = useState(currentYear);
+
+  const statusColors = {
+    present: { dot: '#4CAF50', bg: '#E8F5E9', text: '#4CAF50' },
+    absent: { dot: '#F44336', bg: '#FFEBEE', text: '#F44336' },
+    late: { dot: '#FF9800', bg: '#FFF3E0', text: '#FF9800' },
+    'half-day': { dot: '#2196F3', bg: '#E3F2FD', text: '#2196F3' },
+    weekend: { dot: '#9E9E9E', bg: '#F5F5F5', text: '#9E9E9E' },
+  };
+
   const attendanceData = {
-    '2025-07-01': {
+    [`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`]: {
       status: 'present',
       timeIn: '09:05 AM',
       timeOut: '06:15 PM',
     },
-    '2025-07-02': {
-      status: 'present',
-      timeIn: '09:10 AM',
-      timeOut: '06:20 PM',
-    },
-    '2025-07-03': { status: 'absent' },
-    '2025-07-04': { status: 'weekend' },
-    '2025-07-05': { status: 'weekend' },
-    '2025-07-06': {
-      status: 'present',
-      timeIn: '09:00 AM',
+    [`${currentYear}-${String(currentMonth).padStart(2, '0')}-02`]: {
+      status: 'late',
+      timeIn: '09:45 AM',
       timeOut: '06:10 PM',
     },
-    '2025-07-07': { status: 'late', timeIn: '10:30 AM', timeOut: '06:45 PM' },
-    '2025-07-08': {
-      status: 'present',
-      timeIn: '09:15 AM',
-      timeOut: '06:20 PM',
+    [`${currentYear}-${String(currentMonth).padStart(2, '0')}-03`]: {
+      status: 'absent',
     },
-    '2025-07-09': {
+    [`${currentYear}-${String(currentMonth).padStart(2, '0')}-04`]: {
+      status: 'weekend',
+    },
+    [`${currentYear}-${String(currentMonth).padStart(2, '0')}-05`]: {
+      status: 'weekend',
+    },
+    [`${currentYear}-${String(currentMonth).padStart(2, '0')}-06`]: {
       status: 'half-day',
       timeIn: '09:00 AM',
       timeOut: '01:30 PM',
     },
-    '2025-07-10': {
+    [`${currentYear}-${String(currentMonth).padStart(2, '0')}-07`]: {
       status: 'present',
       timeIn: '08:55 AM',
       timeOut: '06:05 PM',
     },
   };
 
-  // Generate marked dates for calendar
   const markedDates = {};
   Object.keys(attendanceData).forEach(date => {
-    let dotColor = '';
-    switch (attendanceData[date].status) {
-      case 'present':
-        dotColor = '#4CAF50';
-        break;
-      case 'absent':
-        dotColor = '#F44336';
-        break;
-      case 'late':
-        dotColor = '#FF9800';
-        break;
-      case 'half-day':
-        dotColor = '#2196F3';
-        break;
-      case 'weekend':
-        dotColor = '#9E9E9E';
-        break;
-    }
+    const status = attendanceData[date].status;
+    const colors = statusColors[status] || {};
+
     markedDates[date] = {
+      customStyles: {
+        container: {
+          backgroundColor: colors.bg,
+          borderRadius: 8,
+        },
+        text: {
+          color: colors.text,
+          fontWeight: 'bold',
+        },
+      },
       marked: true,
-      dotColor,
-      selected: date === selectedDate,
+      dotColor: colors.dot,
     };
   });
-  markedDates[selectedDate] = { ...markedDates[selectedDate], selected: true };
 
-  // Filter attendance for the selected month
-  const monthlyAttendance = Object.entries(attendanceData)
-    .filter(([date]) => {
-      const [y, m] = date.split('-');
-      return parseInt(m) === month && parseInt(y) === year;
-    })
-    .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA));
-
-  const renderAttendanceItem = ({ item }) => {
-    const [date, data] = item;
-    const day = new Date(date).toLocaleDateString('en-US', {
-      weekday: 'short',
-    });
-
-    return (
-      <View style={styles.attendanceItem}>
-        <View style={styles.dateColumn}>
-          <Text style={styles.dateText}>{date.split('-')[2]}</Text>
-          <Text style={styles.dayText}>{day}</Text>
-        </View>
-
-        <View style={styles.statusColumn}>
-          <View
-            style={[
-              styles.statusIndicator,
-              {
-                backgroundColor:
-                  data.status === 'present'
-                    ? '#E8F5E9'
-                    : data.status === 'absent'
-                    ? '#FFEBEE'
-                    : data.status === 'late'
-                    ? '#FFF3E0'
-                    : data.status === 'half-day'
-                    ? '#E3F2FD'
-                    : '#F5F5F5',
-              },
-            ]}
-          >
-            <Text
-              style={{
-                color:
-                  data.status === 'present'
-                    ? '#4CAF50'
-                    : data.status === 'absent'
-                    ? '#F44336'
-                    : data.status === 'late'
-                    ? '#FF9800'
-                    : data.status === 'half-day'
-                    ? '#2196F3'
-                    : '#9E9E9E',
-                textTransform: 'capitalize',
-              }}
-            >
-              {data.status}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.timeColumn}>
-          {data.timeIn && <Text style={styles.timeText}>{data.timeIn}</Text>}
-          {data.timeOut && <Text style={styles.timeText}>{data.timeOut}</Text>}
-        </View>
-
-        <View style={styles.hoursColumn}>
-          {data.status === 'present' && (
-            <Text style={styles.hoursText}>9h 10m</Text>
-          )}
-          {data.status === 'late' && (
-            <Text style={styles.hoursText}>8h 15m</Text>
-          )}
-          {data.status === 'half-day' && (
-            <Text style={styles.hoursText}>4h 30m</Text>
-          )}
-        </View>
-      </View>
-    );
+  if (!markedDates[selectedDate]) {
+    markedDates[selectedDate] = {};
+  }
+  markedDates[selectedDate].customStyles = {
+    container: { backgroundColor: COLORS.btnColor, borderRadius: 8 },
+    text: { color: '#fff', fontWeight: 'bold' },
   };
+
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  const goToMonth = (newMonth, newYear) => {
+    const newDate = `${newYear}-${String(newMonth).padStart(2, '0')}-01`;
+    setSelectedDate(newDate);
+    setMonth(newMonth);
+    setYear(newYear);
+  };
+
   return (
     <View style={styles.calendarContainer}>
       <Calendar
         current={selectedDate}
         onDayPress={day => setSelectedDate(day.dateString)}
         markedDates={markedDates}
-        // markingType="multi-dot"
+        markingType="custom"
+        // hideArrows={true}
         onMonthChange={date => {
           setMonth(date.month);
           setYear(date.year);
         }}
+        // renderHeader={date => {
+        //   const monthNumber = date.getMonth();
+        //   const yearNumber = date.getFullYear();
+        //   return (
+        //     <View style={styles.header}>
+        //       {/* <TouchableOpacity
+        //         style={styles.arrowButton}
+        //         onPress={() => {
+        //           const prevMonthDate = new Date(year, month - 2, 1);
+        //           goToMonth(
+        //             prevMonthDate.getMonth() + 1,
+        //             prevMonthDate.getFullYear(),
+        //           );
+        //         }}
+        //       >
+        //         <FontAwesome name="angle-double-left" size={18} color="#111" />
+        //         <Text style={styles.arrowText}>Prev</Text>
+        //       </TouchableOpacity> */}
+
+        //       <Text style={styles.headerText}>
+        //         {monthNames[monthNumber]} {yearNumber}
+        //       </Text>
+        //       {/* <TouchableOpacity
+        //         style={styles.arrowButton}
+        //         onPress={() => {
+        //           const nextMonthDate = new Date(year, month, 1);
+        //           goToMonth(
+        //             nextMonthDate.getMonth() + 1,
+        //             nextMonthDate.getFullYear(),
+        //           );
+        //         }}
+        //       >
+        //         <Text style={styles.arrowText}>Next</Text>
+        //         <FontAwesome name="angle-double-right" size={18} color="#111" />
+        //       </TouchableOpacity> */}
+        //     </View>
+        //   );
+        // }}
         theme={{
-          selectedDayBackgroundColor: '#3F51B5',
+          backgroundColor: '#fff',
+          calendarBackground: '#fff',
+          textSectionTitleColor: COLORS.btnColor,
           todayTextColor: '#3F51B5',
-          arrowColor: '#3F51B5',
-          monthTextColor: '#3F51B5',
-          textMonthFontWeight: 'bold',
+          selectedDayBackgroundColor: COLORS.btnColor,
+          selectedDayTextColor: '#fff',
         }}
       />
     </View>
@@ -178,127 +172,35 @@ export default function CalendarCard() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   calendarContainer: {
-    padding: 15,
     backgroundColor: '#fff',
-    elevation: 2,
-    marginBottom: 10,
+    borderRadius: 16,
+    marginHorizontal: 14,
+    overflow: 'hidden',
+    marginBottom: 12,
+    marginTop: 12,
   },
-  dailyAttendance: {
-    padding: 20,
-    backgroundColor: '#fff',
-    marginBottom: 10,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingVertical: 8,
+    borderBottomColor: '#eee',
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#212121',
+  headerText: {
+    fontSize: wp(4),
+    fontFamily: FONT.PoppinsMedium,
+    marginBottom: -4,
   },
-  dailyStats: {
-    backgroundColor: '#fafafa',
-    borderRadius: 10,
-    padding: 15,
-  },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    marginBottom: 15,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    backgroundColor: '#f5f5f5',
-  },
-  statusText: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  timeRow: {
+  arrowButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    gap: 6,
   },
-  timeLabel: {
-    marginLeft: 10,
-    marginRight: 15,
-    color: '#757575',
-    width: 70,
-  },
-  timeValue: {
-    fontWeight: '500',
-    color: '#212121',
-  },
-  summaryRow: {
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  summaryText: {
-    color: '#757575',
-    fontStyle: 'italic',
-  },
-  noDataText: {
-    color: '#9E9E9E',
-    textAlign: 'center',
-    padding: 20,
-  },
-  monthlyAttendance: {
-    flex: 1,
-    paddingHorizontal: 15,
-  },
-  attendanceList: {
-    paddingBottom: 20,
-  },
-  attendanceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  dateColumn: {
-    width: 50,
-    alignItems: 'center',
-  },
-  dateText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#212121',
-  },
-  dayText: {
-    fontSize: 12,
-    color: '#757575',
-    marginTop: 2,
-  },
-  statusColumn: {
-    flex: 1,
-    paddingHorizontal: 10,
-  },
-  statusIndicator: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  timeColumn: {
-    width: 100,
-  },
-  timeText: {
-    fontSize: 12,
-    color: '#757575',
-  },
-  hoursColumn: {
-    width: 70,
-    alignItems: 'flex-end',
-  },
-  hoursText: {
-    fontWeight: '500',
-    color: '#212121',
+  arrowText: {
+    fontFamily: FONT.PoppinsMedium,
+    marginBottom: -4,
   },
 });
