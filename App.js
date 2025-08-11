@@ -1,31 +1,11 @@
-// import { useState } from 'react';
-// import Splash from './src/app/screens/splash/splash';
-// import { AppNavigator } from './src/app/navigators/appNavigator/appNavigator';
-// import AttendanceHistory from './src/app/screens/attendance/attendanceHistory/attendanceHistory';
-
-// export default function App() {
-//   // const [loading, setLoading] = useState(true);
-
-//   // if (loading) {
-//   //   return <Splash onFinish={() => setLoading(false)} />;
-//   // }
-
-//   return <AttendanceHistory />;
-// }
-
-import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import {
-  Camera,
-  useCameraDevice,
-  useFrameProcessor,
-} from 'react-native-vision-camera';
-import { detectFaces } from 'react-native-vision-camera-face-detector';
-import { Worklets } from 'react-native-worklets-core';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text } from 'react-native';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
+import { AppNavigator } from './src/app/navigators/appNavigator/appNavigator';
+import Splash from './src/app/screens/splash/splash';
 
 export default function App() {
   const device = useCameraDevice('front');
-
   useEffect(() => {
     (async () => {
       const status = await Camera.requestCameraPermission();
@@ -33,32 +13,26 @@ export default function App() {
     })();
   }, []);
 
-  const handleFacesDetection = Worklets.createRunOnJS(result => {
-    console.log('detection result', result);
-  });
+  const [loading, setLoading] = useState(true);
 
-  const frameProcessor = useFrameProcessor(frame => {
-    'worklet';
-    const result = detectFaces(frame, {
-      landmarkMode: 'all',
-      classificationMode: 'all',
-      performanceMode: 'fast',
-    });
-    handleFacesDetection(result);
-  }, []);
+  if (loading) {
+    return <Splash onFinish={() => setLoading(false)} />;
+  }
 
   return (
-    <View style={{ flex: 1 }}>
-      {!!device ? (
-        <Camera
-          style={StyleSheet.absoluteFill}
-          device={device}
-          frameProcessor={frameProcessor}
-          isActive={true}
-        />
-      ) : (
-        <Text>No Device</Text>
-      )}
-    </View>
+    // <View style={{ flex: 1 }}>
+    //   {device ? (
+    //     <Camera
+    //       style={StyleSheet.absoluteFill}
+    //       device={device}
+    //       isActive={true}
+    //     />
+    //   ) : (
+    //     <Text>No camera device</Text>
+    //   )}
+    // </View>
+    <AppNavigator />
   );
 }
+
+// https://www.pinterest.com/pin/19773685858814484/

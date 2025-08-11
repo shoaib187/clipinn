@@ -11,6 +11,9 @@ import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.oblador.vectoricons.VectorIconsPackage;
 
+import com.mrousavy.camera.frameprocessors.FrameProcessorPluginRegistry; 
+
+
 class MainApplication : Application(), ReactApplication {
 
   override val reactNativeHost: ReactNativeHost =

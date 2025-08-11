@@ -198,12 +198,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: COLORS.black,
-    // zIndex: 1,
-    // justifyContent: 'center',
-    paddingHorizontal: 14,
   },
   scrollContainer: {
-    marginTop: 14,
+    // marginTop: 14,
     // paddingHorizontal: 14,
     backgroundColor: COLORS.white,
     paddingBottom: 20,

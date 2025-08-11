@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
   SafeAreaView,
   StatusBar,
@@ -16,10 +15,10 @@ import { wp } from '../../../../components/constants/responsiveSize';
 import { FONT } from '../../../../components/constants/font';
 import Header from '../../../../components/common/header/header';
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 const ITEM_HEIGHT = height * 0.2;
 
-export default function AttendanceHistory() {
+export default function AttendanceHistory({ navigation }) {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const renderItem = ({ item }) => {
@@ -79,7 +78,7 @@ export default function AttendanceHistory() {
         barStyle={'light-content'}
         showHideTransition={'fade'}
       />
-      <Header title="Attendance History" />
+      <Header navigation={navigation} title="Attendance History" />
       <Animated.View
         style={[
           styles.backdrop,

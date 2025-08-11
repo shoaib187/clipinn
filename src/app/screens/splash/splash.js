@@ -11,7 +11,7 @@ import { AppNavigator } from '../../navigators/appNavigator/appNavigator';
 import { wp } from '../../../components/constants/responsiveSize';
 // import { COLORS } from '../../../components/constants/colors';
 const LOGO_WIDTH = wp(40);
-export default function App() {
+export default function Splash({ onFinish }) {
   const [showSplash, setShowSplash] = useState(true);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;

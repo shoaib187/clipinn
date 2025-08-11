@@ -10,6 +10,8 @@ import { COLORS } from '../../../components/constants/colors';
 import { wp } from '../../../components/constants/responsiveSize';
 import { FONT } from '../../../components/constants/font';
 import Home from '../../screens/home/homeMainPage/home';
+import FacialRecognition from '../../screens/facialRecognition/facialRecognition';
+import { AttendanceStack } from '../attendanceStack/attendanceStack';
 
 const IconImage = ({ icon }) => {
   return <Image source={icon} style={styles.icon} />;
@@ -50,6 +52,11 @@ const TabNavigation = () => {
                 iconName = focused
                   ? require('../../../../assets/png/tabIcons/checklist-active.png')
                   : require('../../../../assets/png/tabIcons/checklist-inactive.png');
+                break;
+              case 'FacialRecognition':
+                iconName = focused
+                  ? require('../../../../assets/png/tabIcons/scan.png')
+                  : require('../../../../assets/png/tabIcons/scan.png');
                 break;
               case 'Tasks':
                 iconName = focused
@@ -94,7 +101,8 @@ const TabNavigation = () => {
         })}
       >
         <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Attendance" component={AttendanceHomePage} />
+        <Tab.Screen name="Attendance" component={AttendanceStack} />
+        <Tab.Screen name="FacialRecognition" component={FacialRecognition} />
         <Tab.Screen name="Tasks" component={TaskHomePage} />
         <Tab.Screen name="Chats" component={ChatHomePage} />
       </Tab.Navigator>

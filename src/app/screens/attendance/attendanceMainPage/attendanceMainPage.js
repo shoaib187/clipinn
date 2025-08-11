@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,21 +12,80 @@ import {
   Dimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
 import { COLORS } from '../../../../components/constants/colors';
 import { wp } from '../../../../components/constants/responsiveSize';
 import { FONT } from '../../../../components/constants/font';
 import CheckInButton from '../../../../components/common/checkInButton/checkInButton';
+import SlideToCheckInOut from '../../../../components/common/sliderToCheckInOut/slideToCheckInOut';
+import Button from '../../../../components/common/button/button';
+const { height } = Dimensions.get('window');
 
-const { width, height } = Dimensions.get('window');
+import RBSheet from 'react-native-raw-bottom-sheet';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const ITEM_HEIGHT = height * 0.2;
 
-export default function AttendanceMainPage() {
+export default function AttendanceMainPage({ navigation }) {
+  const bottomSheetRef = useRef(null);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [sheetType, setSheetType] = useState(null); // 'checkIn' | 'checkOut'
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+
   const animatedHeight = scrollY.interpolate({
     inputRange: [0, 200],
     outputRange: [ITEM_HEIGHT, 69],
     extrapolate: 'clamp',
   });
+
+  const handleCheckInComplete = async () => {
+    bottomSheetRef.current.close();
+    console.log('✅ Checked in successfully');
+    // API call to mark check-in
+  };
+
+  const handleCheckOutComplete = async () => {
+    bottomSheetRef.current.close();
+    console.log('🚪 Checked out successfully');
+    // API call to mark check-out
+  };
+
+  const openSheet = type => {
+    setSheetType(type);
+    bottomSheetRef.current.open();
+  };
+
+  const handleCheck = () => {
+    if (isCheckedIn) {
+      openSheet('checkOut');
+    } else {
+      openSheet('checkIn');
+    }
+  };
+
+  // const onConfirmCheck = type => {
+  //   if (type === 'checkIn') {
+  //     setIsCheckedIn(true);
+  //   } else if (type === 'checkOut') {
+  //     setIsCheckedIn(false);
+  //   }
+  // };
+
+  const onConfirmCheck = async type => {
+    const today = new Date().toISOString().split('T')[0];
+    const status = type === 'checkIn' ? 'checkedIn' : 'checkedOut';
+
+    await AsyncStorage.setItem(
+      'attendanceStatus',
+      JSON.stringify({ date: today, status }),
+    );
+
+    if (type === 'checkIn') {
+      setIsCheckedIn(true);
+    } else if (type === 'checkOut') {
+      setIsCheckedIn(false);
+    }
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -69,7 +128,13 @@ export default function AttendanceMainPage() {
         <View style={styles.timeAlign}>
           <Text style={styles.time}>09:00 AM</Text>
           <Text style={styles.date}>Oct 26, 2022 - Wednesday</Text>
-          <CheckInButton />
+          <TouchableOpacity
+            style={styles.historyButton}
+            onPress={() => navigation.navigate('AttendanceHistory')}
+          >
+            <Text style={styles.historyButtonText}>View history</Text>
+          </TouchableOpacity>
+          <CheckInButton onPress={handleCheck} />
         </View>
 
         {/* Check In / Check Out */}
@@ -107,6 +172,93 @@ export default function AttendanceMainPage() {
             <Text style={styles.checkLabel}>Total Hours</Text>
           </View>
         </View>
+        <Button title={'View History'} style={{ marginTop: 42 }} />
+        <RBSheet
+          ref={bottomSheetRef}
+          height={320}
+          openDuration={500}
+          closeOnPressBack={true}
+          closeDuration={500}
+          closeOnPressMask={true}
+          dragOnContent={false}
+          customAvoidingViewProps={{ removeClippedSubviews: false }}
+          customStyles={{
+            container: {
+              padding: 18,
+              borderRadius: 10,
+              width: '96%',
+              alignSelf: 'center',
+              bottom: 10,
+            },
+          }}
+        >
+          <View
+            onLayout={e => console.log(e.nativeEvent.layout.height)}
+            style={styles.bottomSheetView}
+          >
+            {/* Close Button */}
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={async () => {
+                bottomSheetRef.current.close();
+                await AsyncStorage.removeItem('attendanceStatus');
+              }}
+            >
+              <Ionicons name="close" size={26} color="#444" />
+            </TouchableOpacity>
+
+            {/* Dynamic Title */}
+            <Text style={styles.sheetTitle}>
+              {sheetType === 'checkIn'
+                ? 'Ready to Check In?'
+                : 'Ready to Check Out?'}
+            </Text>
+
+            {/* Dynamic Message */}
+            <Text style={styles.sheetSubtitle}>
+              {sheetType === 'checkIn'
+                ? 'You’re about to mark your attendance for today.'
+                : 'You’re about to end your workday.'}
+            </Text>
+
+            <Text style={styles.sheetInfo}>
+              {sheetType === 'checkIn' ? (
+                <>
+                  Once confirmed, your work hours will start counting from{' '}
+                  <Text
+                    style={{ fontFamily: FONT.PoppinsMedium, color: '#27ae60' }}
+                  >
+                    09:00 AM
+                  </Text>
+                  .
+                </>
+              ) : (
+                <>Once confirmed, your total worked hours will be calculated.</>
+              )}
+            </Text>
+
+            {/* Policy Note */}
+            <View style={styles.policyBox}>
+              <Ionicons name="information-circle" size={18} color="#2980b9" />
+              <Text style={styles.policyText}>
+                {sheetType === 'checkIn'
+                  ? 'Make sure you’re at the workplace location before checking in.'
+                  : 'Ensure all your tasks are completed before checking out.'}
+              </Text>
+            </View>
+
+            {/* Slider with dynamic onComplete */}
+            <SlideToCheckInOut
+              type={sheetType}
+              onConfirmCheck={onConfirmCheck}
+              onComplete={
+                sheetType === 'checkIn'
+                  ? handleCheckInComplete
+                  : handleCheckOutComplete
+              }
+            />
+          </View>
+        </RBSheet>
       </ScrollView>
     </SafeAreaView>
   );
@@ -138,16 +290,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: 24,
   },
   timeAlign: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 30,
-    // marginTop: 30,
     backgroundColor: '#fff',
-    borderRadius: 12,
-    marginTop: 12,
+    borderRadius: 8,
+    position: 'relative',
+    // marginTop: 12,
   },
   time: {
     fontFamily: FONT.PoppinsSemiBold,
@@ -188,5 +340,64 @@ const styles = StyleSheet.create({
     // zIndex: 1,
     // justifyContent: 'center',
     paddingHorizontal: 14,
+  },
+  historyButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  historyButtonText: {
+    fontFamily: FONT.PoppinsMedium,
+    color: COLORS.btnColor,
+  },
+  bottomSheetView: {
+    position: 'relative',
+  },
+  closeBtn: {
+    width: wp(10),
+    height: wp(10),
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    zIndex: 111,
+  },
+
+  // sheet styles
+  sheetTitle: {
+    fontSize: wp(5),
+    marginBottom: 12,
+    textAlign: 'center',
+    fontFamily: FONT.PoppinsMedium,
+  },
+  sheetSubtitle: {
+    fontSize: wp(4),
+    color: COLORS.btnColor,
+    textAlign: 'center',
+    marginBottom: 4,
+    fontFamily: FONT.PoppinsRegular,
+  },
+  sheetInfo: {
+    fontSize: wp(4),
+    color: COLORS.paraColor,
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+  policyBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ecf6fc',
+    padding: 8,
+    borderRadius: 6,
+    marginBottom: 16,
+  },
+  policyText: {
+    flex: 1,
+    fontSize: wp(3.5),
+    color: '#2980b9',
+    marginLeft: 6,
+    fontFamily: FONT.PoppinsRegular,
+    lineHeight: 18,
   },
 });
